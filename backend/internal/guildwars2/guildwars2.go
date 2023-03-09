@@ -9,16 +9,23 @@ import (
 const api_base = "https://api.guildwars2.com/v2"
 
 type Item struct {
-	Id   uint16 `json:"id"`
+	Id   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-func FetchItem(id uint16) (*Item, error) {
+func FetchItem(id int) (*Item, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/items/%d", api_base, id))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch item %d : %w", id, err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return &Item{}, nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch item %d from guildwars2: API returned with %d", id, resp.StatusCode)
+	}
 
 	item := Item{}
 	err = json.NewDecoder(resp.Body).Decode(&item)
