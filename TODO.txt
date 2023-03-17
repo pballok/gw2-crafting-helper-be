@@ -1,0 +1,1 @@
+* If several API calls are necessary to fill an object, those calls should be parallel
