@@ -29,7 +29,8 @@ func itemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := item.NewItem(itemId)
+	item := item.NewItem(itemId)
+	err = item.FetchAll()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

@@ -1,6 +1,8 @@
 package item
 
-import "github.com/pballok/gw2-crafting-helper/backend/internal/guildwars2"
+import (
+	"github.com/pballok/gw2-crafting-helper/backend/internal/guildwars2"
+)
 
 type Item struct {
 	Id    int
@@ -10,22 +12,30 @@ type Item struct {
 		Buy  int
 		Sell int
 	}
+	Recipes []Recipe
 }
 
-func NewItem(id int) (*Item, error) {
-	item := Item{Id: id}
+func NewItem(id int) *Item {
+	return &Item{Id: id}
+}
 
-	err := item.fetchBase()
+func (i *Item) FetchAll() error {
+	err := i.fetchBase()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = item.fetchPrices()
+	err = i.fetchPrices()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &item, nil
+	err = i.fetchRecipes()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (i *Item) fetchBase() error {
@@ -48,6 +58,24 @@ func (i *Item) fetchPrices() error {
 
 	i.Price.Buy = prices.Buys.Price
 	i.Price.Sell = prices.Sells.Price
+
+	return nil
+}
+
+func (i *Item) fetchRecipes() error {
+	recipeIdList, err := guildwars2.SearchRecipesOutput(i.Id)
+	if err != nil {
+		return err
+	}
+
+	for _, recipeId := range recipeIdList {
+		recipe := NewRecipe(recipeId)
+		err = recipe.FetchAll()
+		if err != nil {
+			return err
+		}
+		i.Recipes = append(i.Recipes, *recipe)
+	}
 
 	return nil
 }
